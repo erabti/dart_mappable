@@ -2,9 +2,10 @@ builders:
   dart_mappable:
     import: "package:dart_mappable/builder.dart"
     builder_factories: [ "buildMappable" ]
-    build_extensions: { ".dart": [ ".mapper.g.dart" ] }
-    auto_apply: none
+    build_extensions: { "lib/$lib$": [ "lib/main.mapper.dart" ] }
+    auto_apply: root_package
     build_to: source
+
 targets:
   $default:
     builders:
@@ -16,4 +17,4 @@ targets:
           enumCaseStyle: camelCase
           libraries:
             test/models/:
-              exclude: [PlayerHooks, JeansHooks]
+              exclude: [ PlayerHooks, JeansHooks ]

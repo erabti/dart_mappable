@@ -27,8 +27,11 @@ class ClassMapperBuilder {
   bool usesFieldHooks = false;
 
   String get className => element.name;
+
   String get mapperName => '${className}Mapper';
+
   String get extensionName => '${mapperName}Extension';
+
   String get paramName => className[0].toLowerCase();
 
   bool get isSuperMapper => subMappers.isNotEmpty;
@@ -150,11 +153,13 @@ class ClassMapperBuilder {
   }
 
   String? _hookForClass;
+
   String? get hookForClass => _hookForClass != null
       ? _hookForClass!.isEmpty
           ? null
           : _hookForClass
       : _getHookForClass();
+
   String? _getHookForClass() {
     String? hook;
     if (hasHooks) {
@@ -229,8 +234,8 @@ class ClassMapperBuilder {
 
     if (shouldGenerate(GenerateMethods.encode)) {
       snippets.add(''
-          '  String toJson() => Mapper.toJson(this);\n'
-          '  Map<String, dynamic> toMap() => Mapper.toMap(this);\n'
+          '  String toJson() => Mapper.i.toJson(this);\n'
+          '  Map<String, dynamic> toMap() => Mapper.i.toMap(this);\n'
           '');
     }
 
@@ -270,7 +275,7 @@ class ClassMapperBuilder {
           '  }';
     }
 
-    call = '_checked(v, (Map<String, dynamic> map) $call)';
+    call = 'checked(v, (Map<String, dynamic> map) $call)';
     if (hookForClass != null) {
       call = '_hookedDecode(const $hookForClass, v, (v) => $call)';
     }
@@ -317,13 +322,15 @@ class ClassMapperBuilder {
       if (mapper.discriminatorValueCode != null) {
         if (mapper.discriminatorValueCode!.startsWith('[') &&
             mapper.discriminatorValueCode!.endsWith(']')) {
-          cases.add(MapEntry(
-              mapper.discriminatorValueCode!
-                  .substring(1, mapper.discriminatorValueCode!.length - 1)
-                  .split(',')
-                  .map((s) => s.trim())
-                  .toList(),
-              mapper.mapperName));
+          cases.add(
+            MapEntry(
+                mapper.discriminatorValueCode!
+                    .substring(1, mapper.discriminatorValueCode!.length - 1)
+                    .split(',')
+                    .map((s) => s.trim())
+                    .toList(),
+                mapper.mapperName),
+          );
         } else {
           cases.add(
               MapEntry([mapper.discriminatorValueCode!], mapper.mapperName));
@@ -476,7 +483,7 @@ class ClassMapperBuilder {
           usesFieldHooks = true;
           exp = '_toValue($paramName.$name, hooks: const $hook)';
         } else {
-          exp = 'Mapper.toValue($paramName.$name)';
+          exp = 'Mapper.i.toValue($paramName.$name)';
         }
 
         if (ignoreNull &&
@@ -526,7 +533,7 @@ class ClassMapperBuilder {
             (field.getter?.isSynthetic ?? false)) {
           var str = '';
           str = '${field.name}: ';
-          str += '\${Mapper.asString(self.${field.name})}';
+          str += '\${Mapper.i.asString(self.${field.name})}';
           params.add(str);
         }
       }
@@ -549,9 +556,9 @@ class ClassMapperBuilder {
     List<String> params = [];
     for (ParameterElement param in constructor?.parameters ?? []) {
       if (param is FieldFormalParameterElement || hasField(param.name)) {
-        params.add('Mapper.hash(self.${param.name})');
+        params.add('Mapper.i.hash(self.${param.name})');
       } else if (superMapper != null && superParams[param.name] != null) {
-        params.add('Mapper.hash(self.${superParams[param.name]!.name})');
+        params.add('Mapper.i.hash(self.${superParams[param.name]!.name})');
       }
     }
 
@@ -566,10 +573,10 @@ class ClassMapperBuilder {
     List<String> params = [];
     for (ParameterElement param in constructor?.parameters ?? []) {
       if (param is FieldFormalParameterElement || hasField(param.name)) {
-        params.add('Mapper.isEqual(self.${param.name}, other.${param.name})');
+        params.add('Mapper.i.isEqual(self.${param.name}, other.${param.name})');
       } else if (superMapper != null && superParams[param.name] != null) {
         params.add(
-            'Mapper.isEqual(self.${superParams[param.name]!.name}, other.${superParams[param.name]!.name})');
+            'Mapper.i.isEqual(self.${superParams[param.name]!.name}, other.${superParams[param.name]!.name})');
       }
     }
     if (params.isEmpty) {
@@ -584,7 +591,7 @@ class ClassMapperBuilder {
         ? ', ${element.typeParameters.map((p) => p.name).join(', ')}'
         : '';
 
-    return '${className}CopyWith<$className$typeParams$classTypeParams> get copyWith => ${className}CopyWith(this, _\$identity);';
+    return '${className}CopyWith<$className$typeParams$classTypeParams> get copyWith => ${className}CopyWith(this, \$identity);';
   }
 
   String _generateCopyWithClasses(
@@ -646,15 +653,15 @@ class ClassMapperBuilder {
 
       if (b.key!.type.isNullable) {
         snippets.add(
-            '_value.${b.key!.name} != null ? ${b.value!.className}CopyWith(_value.${b.key!.name}!, (v) => call(${b.key!.name}: v)) : null;\n');
+            'value.${b.key!.name} != null ? ${b.value!.className}CopyWith(value.${b.key!.name}!, (v) => call(${b.key!.name}: v)) : null;\n');
       } else {
         snippets.add(
-            '${b.value!.className}CopyWith(_value.${b.key!.name}, (v) => call(${b.key!.name}: v));\n');
+            '${b.value!.className}CopyWith(value.${b.key!.name}, (v) => call(${b.key!.name}: v));\n');
       }
     }
 
     snippets.add(
-        '  @override \$R call(${_generateCopyWithParams(implVersion: true)}) => _then(${element.name}${constructor!.name != '' ? '.${constructor!.name}' : ''}(${_generateCopyWithConstructorParams()}));\n'
+        '  @override \$R call(${_generateCopyWithParams(implVersion: true)}) => then(${element.name}${constructor!.name != '' ? '.${constructor!.name}' : ''}(${_generateCopyWithConstructorParams()}));\n'
         '}');
 
     return snippets.join();
@@ -698,9 +705,9 @@ class ClassMapperBuilder {
 
       String paramString(ParameterElement p) {
         if (p.type.nullabilitySuffix == NullabilitySuffix.question) {
-          return 'or(${p.name}, _value.${p.name})';
+          return 'or(${p.name}, value.${p.name})';
         } else {
-          return '${p.name} ?? _value.${p.name}';
+          return '${p.name} ?? value.${p.name}';
         }
       }
 

@@ -4,6 +4,7 @@ import 'package:dart_mappable/dart_mappable.dart';
 
 import '../test.mapper.g.dart';
 
+
 class Person with Mappable {
   final String name;
   final int age;
